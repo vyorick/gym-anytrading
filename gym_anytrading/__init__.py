@@ -1,8 +1,8 @@
-from gym.envs.registration import register
 from copy import deepcopy
 
-from . import datasets
+from gym.envs.registration import register
 
+from . import datasets
 
 register(
     id='forex-v0',
