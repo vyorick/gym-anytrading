@@ -12,8 +12,6 @@ class TradingEnv(gym.Env):
 
     def __init__(self, df, window_size):
         assert df.ndim == 2
-
-        self.seed()
         self.df = df
         self.window_size = window_size
         self.prices, self.signal_features = self._process_data()
@@ -34,10 +32,7 @@ class TradingEnv(gym.Env):
         self._total_reward = None
         self._total_profit = None
         self._first_rendering = None
-
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
+        self.np_random = None
 
     def reset(self):
         self._done = False
