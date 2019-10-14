@@ -52,7 +52,7 @@ class TradingEnv(gym.Env):
         self._done = False
         self._current_tick = self._start_tick
         self._last_trade_tick = self._current_tick - 1
-        self._position = Positions.Short
+        self._position = Positions.Out_of_market
         self._position_history = (self.window_size * [None]) + [self._position]
         self._total_reward = 0.
         self._total_profit = 1.  # unit
@@ -65,10 +65,10 @@ class TradingEnv(gym.Env):
 
         if self._current_tick == self._end_tick:
             self._done = True
-
+        # main works here
         step_reward = self._calculate_reward(action)
         self._total_reward += step_reward
-
+        # and here
         self._update_profit(action)
 
         trade = False
