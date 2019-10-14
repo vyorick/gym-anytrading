@@ -1,10 +1,24 @@
+from enum import Enum
+
 import gym
 import matplotlib.pyplot as plt
 import numpy as np
 from gym import spaces
-from gym.utils import seeding
 
-from gym_anytrading.envs import Actions, Positions
+
+class Actions(Enum):
+    Sell = 0
+    Buy = 1
+    Hold = 2
+
+
+class Positions(Enum):
+    Short = 0
+    Long = 1
+    Out_of_market = 3
+
+    def opposite(self):
+        return Positions.Short if self == Positions.Long else Positions.Long
 
 
 class TradingEnv(gym.Env):

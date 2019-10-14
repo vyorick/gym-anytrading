@@ -1,7 +1,6 @@
 import numpy as np
 
-from .trading_env import TradingEnv
-from gym_anytrading.envs import Actions, Positions
+from .trading_env import TradingEnv, Actions, Positions
 
 
 class ForexEnv(TradingEnv):
