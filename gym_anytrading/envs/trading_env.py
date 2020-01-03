@@ -76,12 +76,12 @@ class TradingEnv(gym.Env):
         # and here
         self._update_profit(action)
 
-        trade = False
+        is_trade = False
         if ((action == Actions.Buy.value and self._position == Positions.Short) or
                 (action == Actions.Sell.value and self._position == Positions.Long)):
-            trade = True
+            is_trade = True
 
-        if trade:
+        if is_trade:
             self._position = self._position.opposite()
             self._last_trade_tick = self._current_tick
 
