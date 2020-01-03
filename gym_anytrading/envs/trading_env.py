@@ -4,6 +4,7 @@ import gym
 import matplotlib.pyplot as plt
 import numpy as np
 from gym import spaces
+from gym.utils import seeding
 
 
 class Actions(Enum):
@@ -47,6 +48,10 @@ class TradingEnv(gym.Env):
         self._total_profit = None
         self._first_rendering = None
         self.np_random = None
+
+    def seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
 
     def reset(self):
         self._done = False
