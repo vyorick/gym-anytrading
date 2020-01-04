@@ -10,7 +10,7 @@ from gym.utils import seeding
 class Actions(Enum):
     Sell = 0
     Buy = 1
-    Hold = 2
+    Nothing = 2
 
 
 class Positions(Enum):
@@ -75,14 +75,15 @@ class TradingEnv(gym.Env):
         self._total_reward += step_reward
         # and here
         self._update_profit(action)
-
+        # TODO отдельно формировать массивы с actions и с position и рендерить оба
         if action == Actions.Buy.value:
             if self._position == Positions.Out_of_market:
                 self._position = Positions.Long
                 # self._position_history.append(self._position)
                 self._last_trade_tick = self._current_tick
             if self._position == Positions.Short:
-                pass # TODO something
+                self._position = Positions.Out_of_market
+                self._last_trade_tick = self._current_tick
             if self._position == Positions.Long:
                 pass # TODO something
         elif action == Actions.Sell.value:
@@ -91,14 +92,12 @@ class TradingEnv(gym.Env):
                 # self._position_history.append(self._position)
                 self._last_trade_tick = self._current_tick
             if self._position == Positions.Long:
-                pass  # TODO something
+                self._position = Positions.Out_of_market
+                self._last_trade_tick = self._current_tick
             if self._position == Positions.Short:
                 pass  # TODO something
-        elif action == Actions.Hold.value:
-            self._position = Positions.Out_of_market
-            if self._position == Positions.Short or self._position == Positions.Long:
-                pass
-                # self._position_history.append(self._position)
+        elif action == Actions.Nothing.value:
+            pass
         else:
             raise Exception("Unknown action received!")
         self._position_history.append(self._position)
