@@ -76,16 +76,33 @@ class TradingEnv(gym.Env):
         # and here
         self._update_profit(action)
 
-        is_trade = False
-        if ((action == Actions.Buy.value and self._position == Positions.Short) or
-                (action == Actions.Sell.value and self._position == Positions.Long)):
-            is_trade = True
-
-        if is_trade:
-            self._position = self._position.opposite()
-            self._last_trade_tick = self._current_tick
-
+        if action == Actions.Buy.value:
+            if self._position == Positions.Out_of_market:
+                self._position = Positions.Long
+                # self._position_history.append(self._position)
+                self._last_trade_tick = self._current_tick
+            if self._position == Positions.Short:
+                pass # TODO something
+            if self._position == Positions.Long:
+                pass # TODO something
+        elif action == Actions.Sell.value:
+            if self._position == Positions.Out_of_market:
+                self._position = Positions.Short
+                # self._position_history.append(self._position)
+                self._last_trade_tick = self._current_tick
+            if self._position == Positions.Long:
+                pass  # TODO something
+            if self._position == Positions.Short:
+                pass  # TODO something
+        elif action == Actions.Hold.value:
+            self._position = Positions.Out_of_market
+            if self._position == Positions.Short or self._position == Positions.Long:
+                pass
+                # self._position_history.append(self._position)
+        else:
+            raise Exception("Unknown action received!")
         self._position_history.append(self._position)
+
         observation = self._get_observation()
         info = dict(
             total_reward=self._total_reward,
@@ -105,6 +122,8 @@ class TradingEnv(gym.Env):
                 color = 'red'
             elif position == Positions.Long:
                 color = 'green'
+            elif position == Positions.Out_of_market:
+                color = 'blue'
             if color:
                 plt.scatter(tick, self.prices[tick], color=color)
 
@@ -130,14 +149,18 @@ class TradingEnv(gym.Env):
 
         short_ticks = []
         long_ticks = []
+        out_ticks = []
         for i, tick in enumerate(window_ticks):
             if self._position_history[i] == Positions.Short:
                 short_ticks.append(tick)
             elif self._position_history[i] == Positions.Long:
                 long_ticks.append(tick)
+            elif self._position_history[i] == Positions.Out_of_market:
+                out_ticks.append(tick)
 
         plt.plot(short_ticks, self.prices[short_ticks], 'ro')
         plt.plot(long_ticks, self.prices[long_ticks], 'go')
+        plt.plot(out_ticks, self.prices[out_ticks], 'bo')
 
         plt.suptitle(
             "Total Reward: %.6f" % self._total_reward + ' ~ ' +
