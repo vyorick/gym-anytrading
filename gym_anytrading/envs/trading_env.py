@@ -8,9 +8,9 @@ from gym.utils import seeding
 
 
 class Actions(Enum):
-    Sell = 0
+    Sell = 2
     Buy = 1
-    Nothing = 2
+    Nothing = 0
 
 
 class Positions(Enum):
@@ -43,7 +43,8 @@ class TradingEnv(gym.Env):
         self._done = None
         self._current_tick = None
         self._last_trade_tick = None
-        self._position_history = None
+        self._action_history = None
+        self._position_history = {}
         self._total_reward = None
         self._total_profit = None
         self._first_rendering = None
@@ -58,7 +59,8 @@ class TradingEnv(gym.Env):
         self._current_tick = self._start_tick
         self._last_trade_tick = self._current_tick - 1
         self._position = Positions.Out_of_market
-        self._position_history = (self.window_size * [None]) + [self._position]
+        self._action_history = ((self.window_size + 1) * [Actions.Nothing.value])
+        self._position_history = {}
         self._total_reward = 0.
         self._total_profit = 1.  # unit
         self._first_rendering = True
@@ -67,6 +69,7 @@ class TradingEnv(gym.Env):
     def step(self, action):
         self._done = False
         self._current_tick += 1
+        self._action_history.append(action)
 
         if self._current_tick == self._end_tick:
             self._done = True
@@ -79,28 +82,29 @@ class TradingEnv(gym.Env):
         if action == Actions.Buy.value:
             if self._position == Positions.Out_of_market:
                 self._position = Positions.Long
-                # self._position_history.append(self._position)
+                self._position_history[self._current_tick] = self._position
                 self._last_trade_tick = self._current_tick
             if self._position == Positions.Short:
                 self._position = Positions.Out_of_market
                 self._last_trade_tick = self._current_tick
+                self._position_history[self._current_tick] = self._position
             if self._position == Positions.Long:
-                pass # TODO something
+                pass  # TODO something
         elif action == Actions.Sell.value:
             if self._position == Positions.Out_of_market:
                 self._position = Positions.Short
-                # self._position_history.append(self._position)
+                self._position_history[self._current_tick] = self._position
                 self._last_trade_tick = self._current_tick
             if self._position == Positions.Long:
                 self._position = Positions.Out_of_market
                 self._last_trade_tick = self._current_tick
+                self._position_history[self._current_tick] = self._position
             if self._position == Positions.Short:
                 pass  # TODO something
         elif action == Actions.Nothing.value:
             pass
         else:
             raise Exception("Unknown action received!")
-        self._position_history.append(self._position)
 
         observation = self._get_observation()
         info = dict(
@@ -116,6 +120,8 @@ class TradingEnv(gym.Env):
     def render(self, mode='human'):
 
         def _plot_position(position, tick):
+            if tick not in self._position_history:
+                return
             color = None
             if position == Positions.Short:
                 color = 'red'
@@ -130,7 +136,7 @@ class TradingEnv(gym.Env):
             self._first_rendering = False
             plt.cla()
             plt.plot(self.prices)
-            start_position = self._position_history[self._start_tick]
+            start_position = self._action_history[self._start_tick]
             _plot_position(start_position, self._start_tick)
 
         _plot_position(self._position, self._current_tick)
@@ -149,16 +155,18 @@ class TradingEnv(gym.Env):
         short_ticks = []
         long_ticks = []
         out_ticks = []
-        for i, tick in enumerate(window_ticks):
-            if self._position_history[i] == Positions.Short:
-                short_ticks.append(tick)
-            elif self._position_history[i] == Positions.Long:
+        for tick, position in self._position_history.items():
+            if position == Positions.Long:
                 long_ticks.append(tick)
-            elif self._position_history[i] == Positions.Out_of_market:
+            elif position == Positions.Short:
+                short_ticks.append(tick)
+            elif position == Positions.Out_of_market:
                 out_ticks.append(tick)
 
-        plt.plot(short_ticks, self.prices[short_ticks], 'ro')
+#        plt.plot(short_ticks, [1]*len(short_ticks), 'ro')
+        plt.xlabel(self._action_history)
         plt.plot(long_ticks, self.prices[long_ticks], 'go')
+        plt.plot(short_ticks, self.prices[short_ticks], 'ro')
         plt.plot(out_ticks, self.prices[out_ticks], 'bo')
 
         plt.suptitle(
