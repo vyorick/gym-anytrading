@@ -106,10 +106,11 @@ class TradingEnv(gym.Env):
         # and here
         self._update_profit(action)
         state = self.fsm.get_state(self._position, action)
-        if state.is_trade_start or state.is_trade_end:
-            self._position_history[self._current_tick] = self._position
-            self._last_trade_tick = self._current_tick
         self._position = state.new_position
+        if state.old_position != state.new_position:
+            self._position_history[self._current_tick] = self._position
+            if state.is_trade_start:
+                self._last_trade_tick = self._current_tick
         observation = self._get_observation()
         info = dict(
             total_reward=self._total_reward,
