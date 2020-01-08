@@ -18,9 +18,6 @@ class Positions(Enum):
     Long = 1
     Out_of_market = 3
 
-    def opposite(self):
-        return Positions.Short if self == Positions.Long else Positions.Long
-
 
 class StateElement:
     def __init__(self, old_position, action, new_position):
