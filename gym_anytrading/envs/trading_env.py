@@ -22,6 +22,28 @@ class Positions(Enum):
         return Positions.Short if self == Positions.Long else Positions.Long
 
 
+class StateElement:
+    def __init__(self, old_position, action, new_position):
+        self.old_position = old_position
+        self.action = action
+        self.new_position = new_position
+        self.is_trade_start = old_position == Positions.Out_of_market and new_position != Positions.Out_of_market
+        self.is_trade_end = old_position != Positions.Out_of_market and new_position == Positions.Out_of_market
+
+
+class TradingFSM:
+    def __init__(self):
+        self._states = [StateElement(Positions.Out_of_market, Actions.Buy, Positions.Long),
+                        StateElement(Positions.Out_of_market, Actions.Sell, Positions.Short),
+                        StateElement(Positions.Out_of_market, Actions.Nothing, Positions.Out_of_market),
+                        StateElement(Positions.Long, Actions.Buy, Positions.Long),
+                        StateElement(Positions.Long, Actions.Sell, Positions.Out_of_market),
+                        StateElement(Positions.Long, Actions.Nothing, Positions.Long),
+                        StateElement(Positions.Short, Actions.Buy, Positions.Out_of_market),
+                        StateElement(Positions.Short, Actions.Sell, Positions.Short),
+                        StateElement(Positions.Short, Actions.Nothing, Positions.Short)]
+
+
 class TradingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
@@ -44,7 +66,7 @@ class TradingEnv(gym.Env):
         self._current_tick = None
         self._last_trade_tick = None
         self._action_history = None
-        self._position_history = {}
+        self._position_history = None
         self._total_reward = None
         self._total_profit = None
         self._first_rendering = None
@@ -163,7 +185,7 @@ class TradingEnv(gym.Env):
             elif position == Positions.Out_of_market:
                 out_ticks.append(tick)
 
-#        plt.plot(short_ticks, [1]*len(short_ticks), 'ro')
+        #        plt.plot(short_ticks, [1]*len(short_ticks), 'ro')
         plt.xlabel(self._action_history)
         plt.plot(long_ticks, self.prices[long_ticks], 'go')
         plt.plot(short_ticks, self.prices[short_ticks], 'ro')
