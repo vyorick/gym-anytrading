@@ -27,23 +27,17 @@ class ForexEnv(TradingEnv):
 
         return prices, signal_features
 
-    def _update_profit(self, action):
-        trade = False
-        if ((action == Actions.Buy.value and self._position == Positions.Short) or
-                (action == Actions.Sell.value and self._position == Positions.Long)):
-            trade = True
-
-        if trade or self._done:
+    def _update_profit(self, state):
+        if state.is_trade_end or self._done:
             current_price = self.prices[self._current_tick]
             last_trade_price = self.prices[self._last_trade_tick]
 
             if self.unit_side == 'left':
-                if self._position == Positions.Short:
+                if state.old_position == Positions.Short:
                     quantity = self._total_profit * (last_trade_price - self.trade_fee)
                     self._total_profit = quantity / current_price
-
             elif self.unit_side == 'right':
-                if self._position == Positions.Long:
+                if state.old_position == Positions.Long:
                     quantity = self._total_profit / last_trade_price
                     self._total_profit = quantity * (current_price - self.trade_fee)
 

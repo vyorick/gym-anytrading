@@ -23,19 +23,17 @@ class StocksEnv(TradingEnv):
 
         return prices, signal_features
 
-    def _update_profit(self, action):
-        trade = False
-        if ((action == Actions.Buy.value and self._position == Positions.Short) or
-                (action == Actions.Sell.value and self._position == Positions.Long)):
-            trade = True
-
-        if trade or self._done:
+    def _update_profit(self, state):
+        if state.is_trade_end or self._done:
             current_price = self.prices[self._current_tick]
             last_trade_price = self.prices[self._last_trade_tick]
 
-            if self._position == Positions.Long:
+            if state.old_position == Positions.Long:
                 shares = (self._total_profit * (1 - self.trade_fee_ask_percent)) / last_trade_price
                 self._total_profit = (shares * (1 - self.trade_fee_bid_percent)) * current_price
+            elif state.old_position == Positions.Short:
+                shares = (self._total_profit * (1 - self.trade_fee_bid_percent)) / last_trade_price
+                self._total_profit = (shares * (1 - self.trade_fee_ask_percent)) * current_price
 
     def max_possible_profit(self):
         current_tick = self._start_tick

@@ -47,6 +47,7 @@ class TradingFSM:
         for state in self._states:
             if old_position == state.old_position and action == state.action.value:
                 return state
+        raise Exception('State not found!')
 
 
 class TradingEnv(gym.Env):
@@ -107,7 +108,7 @@ class TradingEnv(gym.Env):
         step_reward = self._calculate_reward(state)
         self._total_reward += step_reward
         # and here
-        self._update_profit(action)
+        self._update_profit(state)
         self._position = state.new_position
         if state.old_position != state.new_position:
             self._position_history[self._current_tick] = self._position
@@ -204,7 +205,7 @@ class TradingEnv(gym.Env):
 
         return step_reward
 
-    def _update_profit(self, action):
+    def _update_profit(self, state):
         raise NotImplementedError
 
     def max_possible_profit(self):  # trade fees are ignored
