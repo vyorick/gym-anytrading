@@ -77,6 +77,8 @@ class TradingEnv(gym.Env):
         self._first_rendering = None
         self.np_random = None
 
+        self.leverage = 1
+
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
@@ -100,12 +102,12 @@ class TradingEnv(gym.Env):
 
         if self._current_tick == self._end_tick:
             self._done = True
+        state = self.fsm.get_state(self._position, action)
         # main works here
-        step_reward = self._calculate_reward(action)
+        step_reward = self._calculate_reward(state)
         self._total_reward += step_reward
         # and here
         self._update_profit(action)
-        state = self.fsm.get_state(self._position, action)
         self._position = state.new_position
         if state.old_position != state.new_position:
             self._position_history[self._current_tick] = self._position
@@ -188,8 +190,19 @@ class TradingEnv(gym.Env):
     def _process_data(self):
         raise NotImplementedError
 
-    def _calculate_reward(self, action):
-        raise NotImplementedError
+    def _calculate_reward(self, state):
+        step_reward = 0  # pip
+        if state.is_trade_end:
+            current_price = self.prices[self._current_tick]
+            last_trade_price = self.prices[self._last_trade_tick]
+            price_diff = current_price - last_trade_price
+
+            if state.old_position == Positions.Short:
+                step_reward += -price_diff * self.leverage
+            elif state.old_position == Positions.Long:
+                step_reward += price_diff * self.leverage
+
+        return step_reward
 
     def _update_profit(self, action):
         raise NotImplementedError

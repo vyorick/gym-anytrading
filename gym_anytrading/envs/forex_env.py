@@ -14,6 +14,7 @@ class ForexEnv(TradingEnv):
         super().__init__(df, window_size)
 
         self.trade_fee = 0.0003  # unit
+        self.leverage = 10000
 
     def _process_data(self):
         prices = self.df.loc[:, 'Close'].to_numpy()
@@ -25,26 +26,6 @@ class ForexEnv(TradingEnv):
         signal_features = np.column_stack((prices, diff))
 
         return prices, signal_features
-
-    def _calculate_reward(self, action):
-        step_reward = 0  # pip
-
-        trade = False
-        if ((action == Actions.Buy.value and self._position == Positions.Short) or
-                (action == Actions.Sell.value and self._position == Positions.Long)):
-            trade = True
-
-        if trade:
-            current_price = self.prices[self._current_tick]
-            last_trade_price = self.prices[self._last_trade_tick]
-            price_diff = current_price - last_trade_price
-
-            if self._position == Positions.Short:
-                step_reward += -price_diff * 10000
-            elif self._position == Positions.Long:
-                step_reward += price_diff * 10000
-
-        return step_reward
 
     def _update_profit(self, action):
         trade = False
