@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 
 import gym
@@ -5,6 +6,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 from gym import spaces
 from gym.utils import seeding
+
+# Create a custom logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+# Create handlers
+c_handler = logging.StreamHandler()
+# Create formatters and add it to handlers
+c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+c_handler.setFormatter(c_format)
+# Add handlers to the logger
+logger.addHandler(c_handler)
 
 
 class Actions(Enum):
@@ -14,9 +26,9 @@ class Actions(Enum):
 
 
 class Positions(Enum):
-    Short = 0
     Long = 1
-    Out_of_market = 3
+    Short = 2
+    Out = 0
 
 
 class StateElement:
@@ -24,19 +36,22 @@ class StateElement:
         self.old_position = old_position
         self.action = action
         self.new_position = new_position
-        self.is_trade_start = old_position == Positions.Out_of_market and new_position != Positions.Out_of_market
-        self.is_trade_end = old_position != Positions.Out_of_market and new_position == Positions.Out_of_market
+        self.is_trade_start = old_position == Positions.Out and new_position != Positions.Out
+        self.is_trade_end = old_position != Positions.Out and new_position == Positions.Out
+
+    def __str__(self):
+        return f"old: {self.old_position}, action: {self.action}, new: {self.new_position}, start: {self.is_trade_start}, end:{self.is_trade_end}"
 
 
 class TradingFSM:
     def __init__(self):
-        self._states = [StateElement(Positions.Out_of_market, Actions.Buy, Positions.Long),
-                        StateElement(Positions.Out_of_market, Actions.Sell, Positions.Short),
-                        StateElement(Positions.Out_of_market, Actions.Nothing, Positions.Out_of_market),
+        self._states = [StateElement(Positions.Out, Actions.Buy, Positions.Long),
+                        StateElement(Positions.Out, Actions.Sell, Positions.Short),
+                        StateElement(Positions.Out, Actions.Nothing, Positions.Out),
                         StateElement(Positions.Long, Actions.Buy, Positions.Long),
-                        StateElement(Positions.Long, Actions.Sell, Positions.Out_of_market),
+                        StateElement(Positions.Long, Actions.Sell, Positions.Out),
                         StateElement(Positions.Long, Actions.Nothing, Positions.Long),
-                        StateElement(Positions.Short, Actions.Buy, Positions.Out_of_market),
+                        StateElement(Positions.Short, Actions.Buy, Positions.Out),
                         StateElement(Positions.Short, Actions.Sell, Positions.Short),
                         StateElement(Positions.Short, Actions.Nothing, Positions.Short)]
 
@@ -64,7 +79,7 @@ class TradingEnv(gym.Env):
         # episode
         self._start_tick = self.window_size
         self._end_tick = len(self.prices) - 1
-        self._position = Positions.Out_of_market
+        self._position = Positions.Out
         self._done = None
         self._current_tick = None
         self._last_trade_tick = None
@@ -85,7 +100,7 @@ class TradingEnv(gym.Env):
         self._done = False
         self._current_tick = self._start_tick
         self._last_trade_tick = self._current_tick - 1
-        self._position = Positions.Out_of_market
+        self._position = Positions.Out
         self._action_history = ((self.window_size + 1) * [Actions.Nothing.value])
         self._position_history = {}
         self._total_reward = 0.
@@ -101,9 +116,11 @@ class TradingEnv(gym.Env):
         if self._current_tick == self._end_tick:
             self._done = True
         state = self.fsm.get_state(self._position, action)
+        logger.info(f"current tick {self._current_tick}, state {state}")
         # main works here
         step_reward = self._calculate_reward(state)
         self._total_reward += step_reward
+        logger.info(f"step reward {step_reward}, total reward {self._total_reward}")
         # and here
         self._update_profit(state)
         self._position = state.new_position
@@ -132,7 +149,7 @@ class TradingEnv(gym.Env):
                 color = 'red'
             elif position == Positions.Long:
                 color = 'green'
-            elif position == Positions.Out_of_market:
+            elif position == Positions.Out:
                 color = 'blue'
             if color:
                 plt.scatter(tick, self.prices[tick], color=color)
@@ -165,7 +182,7 @@ class TradingEnv(gym.Env):
                 long_ticks.append(tick)
             elif position == Positions.Short:
                 short_ticks.append(tick)
-            elif position == Positions.Out_of_market:
+            elif position == Positions.Out:
                 out_ticks.append(tick)
 
         #        plt.plot(short_ticks, [1]*len(short_ticks), 'ro')
@@ -199,6 +216,7 @@ class TradingEnv(gym.Env):
                 step_reward += -price_diff * self.leverage
             elif state.old_position == Positions.Long:
                 step_reward += price_diff * self.leverage
+            logger.debug(f"current_price {current_price}, last_trade_price {last_trade_price}, price_diff {price_diff} step_reward {step_reward}")
 
         return step_reward
 
