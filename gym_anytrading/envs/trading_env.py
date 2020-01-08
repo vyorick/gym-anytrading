@@ -43,6 +43,11 @@ class TradingFSM:
                         StateElement(Positions.Short, Actions.Sell, Positions.Short),
                         StateElement(Positions.Short, Actions.Nothing, Positions.Short)]
 
+    def get_state(self, old_position, action):
+        for state in self._states:
+            if old_position == state.old_position and action == state.action.value:
+                return state
+
 
 class TradingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -53,7 +58,7 @@ class TradingEnv(gym.Env):
         self.window_size = window_size
         self.prices, self.signal_features = self._process_data()
         self.shape = (window_size, self.signal_features.shape[1])
-
+        self.fsm = TradingFSM()
         # spaces
         self.action_space = spaces.Discrete(len(Actions))
         self.observation_space = spaces.Box(low=np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
@@ -100,39 +105,16 @@ class TradingEnv(gym.Env):
         self._total_reward += step_reward
         # and here
         self._update_profit(action)
-        # TODO отдельно формировать массивы с actions и с position и рендерить оба
-        if action == Actions.Buy.value:
-            if self._position == Positions.Out_of_market:
-                self._position = Positions.Long
-                self._position_history[self._current_tick] = self._position
-                self._last_trade_tick = self._current_tick
-            if self._position == Positions.Short:
-                self._position = Positions.Out_of_market
-                self._last_trade_tick = self._current_tick
-                self._position_history[self._current_tick] = self._position
-            if self._position == Positions.Long:
-                pass  # TODO something
-        elif action == Actions.Sell.value:
-            if self._position == Positions.Out_of_market:
-                self._position = Positions.Short
-                self._position_history[self._current_tick] = self._position
-                self._last_trade_tick = self._current_tick
-            if self._position == Positions.Long:
-                self._position = Positions.Out_of_market
-                self._last_trade_tick = self._current_tick
-                self._position_history[self._current_tick] = self._position
-            if self._position == Positions.Short:
-                pass  # TODO something
-        elif action == Actions.Nothing.value:
-            pass
-        else:
-            raise Exception("Unknown action received!")
-
+        state = self.fsm.get_state(self._position, action)
+        if state.is_trade_start or state.is_trade_end:
+            self._position_history[self._current_tick] = self._position
+            self._last_trade_tick = self._current_tick
+        self._position = state.new_position
         observation = self._get_observation()
         info = dict(
             total_reward=self._total_reward,
             total_profit=self._total_profit,
-            position=self._position.value
+            position=self._position
         )
         return observation, step_reward, self._done, info
 
