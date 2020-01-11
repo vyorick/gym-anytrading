@@ -189,7 +189,7 @@ class TradingEnv(gym.Env):
                 out_ticks.append(tick)
 
         #        plt.plot(short_ticks, [1]*len(short_ticks), 'ro')
-        plt.xlabel(self._action_history)
+        # plt.xlabel(self._action_history)
         plt.plot(long_ticks, self.prices[long_ticks], 'go')
         plt.plot(short_ticks, self.prices[short_ticks], 'ro')
         plt.plot(out_ticks, self.prices[out_ticks], 'bo')
