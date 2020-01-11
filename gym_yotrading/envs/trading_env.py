@@ -9,7 +9,7 @@ from gym.utils import seeding
 
 # Create a custom logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.ERROR)
 # Create handlers
 c_handler = logging.StreamHandler()
 # Create formatters and add it to handlers
