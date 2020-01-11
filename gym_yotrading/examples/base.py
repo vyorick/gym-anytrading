@@ -1,7 +1,7 @@
 import gym
-import gym_anytrading
-from gym_anytrading.envs import TradingEnv, ForexEnv, StocksEnv
-from gym_anytrading.datasets import FOREX_EURUSD_1H_ASK, STOCKS_GOOGL
+import gym_yotrading
+from gym_yotrading.envs import TradingEnv, ForexEnv, StocksEnv
+from gym_yotrading.datasets import FOREX_EURUSD_1H_ASK, STOCKS_GOOGL
 import matplotlib.pyplot as plt
 
 env = gym.make('forex-v1', frame_bound=(50, 100), window_size=10)

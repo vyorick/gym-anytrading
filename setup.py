@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='gym_anytrading',
+    name='gym_yotrading',
     version='1.0.0',
     packages=find_packages(),
 
-    author='AminHP',
-    author_email='mdan.hagh@gmail.com',
+    author='VL',
+    author_email='vladimir.lavrentiev@gmail.com',
 
     install_requires=[
         'gym>=0.12.5',
@@ -16,6 +16,6 @@ setup(
     ],
 
     package_data={
-        'gym_anytrading': ['datasets/data/*']
+        'gym_yotrading': ['datasets/data/*']
     }
 )
