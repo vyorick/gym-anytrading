@@ -65,10 +65,11 @@ class TradingFSM:
 class TradingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, df, window_size):
+    def __init__(self, df, window_size, max_loss):
         assert df.ndim == 2
         self.df = df
         self.window_size = window_size
+        self.max_loss = max_loss
         self.prices, self.signal_features = self._process_data()
         self.shape = (window_size, self.signal_features.shape[1])
         self.fsm = TradingFSM()
@@ -114,6 +115,8 @@ class TradingEnv(gym.Env):
         self._action_history.append(action)
 
         if self._current_tick == self._end_tick:
+            self._done = True
+        if self._total_reward < -self.max_loss:
             self._done = True
         state = self.fsm.get_state(self._position, action)
         logger.info(f"current tick {self._current_tick}, state {state}")
