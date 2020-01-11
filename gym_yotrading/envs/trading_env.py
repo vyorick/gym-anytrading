@@ -65,7 +65,7 @@ class TradingFSM:
 class TradingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, df, window_size, max_loss):
+    def __init__(self, df, window_size, max_loss=None):
         assert df.ndim == 2
         self.df = df
         self.window_size = window_size
@@ -116,7 +116,7 @@ class TradingEnv(gym.Env):
 
         if self._current_tick == self._end_tick:
             self._done = True
-        if self._total_reward < -self.max_loss:
+        if self.max_loss is not None and self._total_reward < -self.max_loss:
             self._done = True
         state = self.fsm.get_state(self._position, action)
         logger.info(f"current tick {self._current_tick}, state {state}")
