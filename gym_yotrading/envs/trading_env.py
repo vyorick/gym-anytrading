@@ -90,7 +90,7 @@ class TradingEnv(gym.Env):
         self._total_profit = None
         self._first_rendering = None
         self.np_random = None
-
+        self.trades_count = 0
         self.leverage = 1
 
     def seed(self, seed=None):
@@ -107,6 +107,7 @@ class TradingEnv(gym.Env):
         self._total_reward = 0.
         self._total_profit = 1.  # unit
         self._first_rendering = True
+        self.trades_count = 0
         return self._get_observation()
 
     def step(self, action):
@@ -131,6 +132,7 @@ class TradingEnv(gym.Env):
             self._position_history[self._current_tick] = self._position
             if state.is_trade_start:
                 self._last_trade_tick = self._current_tick
+                self.trades_count += 1
         observation = self._get_observation()
         info = dict(
             total_reward=self._total_reward,
@@ -140,6 +142,7 @@ class TradingEnv(gym.Env):
         if self._done:
             info["position_history"] = self._position_history
             info["action_history"] = self._action_history
+            info["trades_count"] = self.trades_count
         return observation, step_reward, self._done, info
 
     def _get_observation(self):
