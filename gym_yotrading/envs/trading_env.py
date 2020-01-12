@@ -137,6 +137,9 @@ class TradingEnv(gym.Env):
             total_profit=self._total_profit,
             position=self._position
         )
+        if self._done:
+            info["position_history"] = self._position_history
+            info["action_history"] = self._action_history
         return observation, step_reward, self._done, info
 
     def _get_observation(self):
