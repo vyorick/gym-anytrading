@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='gym_yotrading',
-    version='1.0.5',
+    version='1.0.6',
     packages=find_packages(),
 
     author='VL',

@@ -20,14 +20,14 @@ logger.addHandler(c_handler)
 
 
 class Actions(Enum):
-    Sell = -1
+    Sell = 2
     Buy = 1
     Nothing = 0
 
 
 class Positions(Enum):
     Long = 1
-    Short = -1
+    Short = 2
     Out = 0
 
 
