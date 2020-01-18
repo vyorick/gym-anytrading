@@ -122,7 +122,9 @@ class TradingEnv(gym.Env):
         state = self.fsm.get_state(self._position, action)
         logger.info(f"current tick {self._current_tick}, state {state}")
         # main works here
-        step_reward = self._calculate_reward(state)
+        step_reward = 0
+        if state.is_trade_end or self._done:
+            step_reward = self._calculate_reward(state)
         self._total_reward += step_reward
         logger.info(f"step reward {step_reward}, total reward {self._total_reward}")
         # and here
@@ -215,19 +217,18 @@ class TradingEnv(gym.Env):
         raise NotImplementedError
 
     def _calculate_reward(self, state):
-        step_reward = 0  # pip
-        if state.is_trade_end:
-            current_price = self.prices[self._current_tick]
-            last_trade_price = self.prices[self._last_trade_tick]
-            price_diff = current_price - last_trade_price
+        _step_reward = 0  # pip
+        current_price = self.prices[self._current_tick]
+        last_trade_price = self.prices[self._last_trade_tick]
+        price_diff = current_price - last_trade_price
 
-            if state.old_position == Positions.Short:
-                step_reward += -price_diff * self.leverage
-            elif state.old_position == Positions.Long:
-                step_reward += price_diff * self.leverage
-            logger.debug(f"current_price {current_price}, last_trade_price {last_trade_price}, price_diff {price_diff} step_reward {step_reward}")
+        if state.old_position == Positions.Short:
+            _step_reward += -price_diff * self.leverage
+        elif state.old_position == Positions.Long:
+            _step_reward += price_diff * self.leverage
+        logger.debug(f"current_price {current_price}, last_trade_price {last_trade_price}, price_diff {price_diff} step_reward {_step_reward}")
 
-        return step_reward
+        return _step_reward
 
     def _update_profit(self, state):
         raise NotImplementedError
