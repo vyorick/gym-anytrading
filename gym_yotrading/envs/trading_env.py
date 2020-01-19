@@ -20,15 +20,17 @@ logger.addHandler(c_handler)
 
 
 class Actions(Enum):
-    Sell = 2
-    Buy = 1
     Nothing = 0
+    Buy = 1
+    Sell = 2
+    CloseLong = 3
+    CloseShort = 4
 
 
 class Positions(Enum):
+    Out = 0
     Long = 1
     Short = 2
-    Out = 0
 
 
 class StateElement:
@@ -45,15 +47,25 @@ class StateElement:
 
 class TradingFSM:
     def __init__(self):
-        self._states = [StateElement(Positions.Out, Actions.Buy, Positions.Long),
-                        StateElement(Positions.Out, Actions.Sell, Positions.Short),
-                        StateElement(Positions.Out, Actions.Nothing, Positions.Out),
-                        StateElement(Positions.Long, Actions.Buy, Positions.Long),
-                        StateElement(Positions.Long, Actions.Sell, Positions.Out),
-                        StateElement(Positions.Long, Actions.Nothing, Positions.Long),
-                        StateElement(Positions.Short, Actions.Buy, Positions.Out),
-                        StateElement(Positions.Short, Actions.Sell, Positions.Short),
-                        StateElement(Positions.Short, Actions.Nothing, Positions.Short)]
+        self._states = [
+            StateElement(Positions.Out, Actions.Buy, Positions.Long),
+            StateElement(Positions.Out, Actions.Sell, Positions.Short),
+            StateElement(Positions.Out, Actions.Nothing, Positions.Out),
+            StateElement(Positions.Out, Actions.CloseLong, Positions.Out),
+            StateElement(Positions.Out, Actions.CloseShort, Positions.Out),
+            ###
+            StateElement(Positions.Long, Actions.Buy, Positions.Long),
+            StateElement(Positions.Long, Actions.Sell, Positions.Out),
+            StateElement(Positions.Long, Actions.Nothing, Positions.Long),
+            StateElement(Positions.Long, Actions.CloseLong, Positions.Out),
+            StateElement(Positions.Long, Actions.CloseShort, Positions.Long),
+            ###
+            StateElement(Positions.Short, Actions.Buy, Positions.Out),
+            StateElement(Positions.Short, Actions.Sell, Positions.Short),
+            StateElement(Positions.Short, Actions.Nothing, Positions.Short),
+            StateElement(Positions.Short, Actions.CloseLong, Positions.Short),
+            StateElement(Positions.Short, Actions.CloseShort, Positions.Out),
+        ]
 
     def get_state(self, old_position, action):
         for state in self._states:
@@ -75,6 +87,7 @@ class TradingEnv(gym.Env):
         self.fsm = TradingFSM()
         # spaces
         self.action_space = spaces.Discrete(len(Actions))
+        # TODO: нужно попробовать ограничить
         self.observation_space = spaces.Box(low=np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
 
         # episode
@@ -226,7 +239,8 @@ class TradingEnv(gym.Env):
             _step_reward += -price_diff * self.leverage
         elif state.old_position == Positions.Long:
             _step_reward += price_diff * self.leverage
-        logger.debug(f"current_price {current_price}, last_trade_price {last_trade_price}, price_diff {price_diff} step_reward {_step_reward}")
+        logger.debug(
+            f"current_price {current_price}, last_trade_price {last_trade_price}, price_diff {price_diff} step_reward {_step_reward}")
 
         return _step_reward
 
