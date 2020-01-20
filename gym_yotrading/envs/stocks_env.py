@@ -31,9 +31,9 @@ class StocksEnv(TradingEnv):
             if state.old_position == Positions.Long:
                 shares = (self._total_profit * (1 - self.trade_fee_ask_percent)) / last_trade_price
                 self._total_profit = (shares * (1 - self.trade_fee_bid_percent)) * current_price
-            elif state.old_position == Positions.Short:
-                shares = (self._total_profit * (1 - self.trade_fee_bid_percent)) / last_trade_price
-                self._total_profit = (shares * (1 - self.trade_fee_ask_percent)) * current_price
+            # elif state.old_position == Positions.Short:
+            #     shares = (self._total_profit * (1 - self.trade_fee_bid_percent)) / last_trade_price
+            #     self._total_profit = (shares * (1 - self.trade_fee_ask_percent)) * current_price
 
     def max_possible_profit(self):
         current_tick = self._start_tick

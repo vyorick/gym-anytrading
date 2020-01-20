@@ -20,15 +20,16 @@ logger.addHandler(c_handler)
 
 
 class Actions(Enum):
-    Sell = 2
-    Buy = 1
+    # Sell = 2
     Nothing = 0
+    Buy = 1
+    # CloseLong = 2
 
 
 class Positions(Enum):
-    Long = 1
-    Short = 2
     Out = 0
+    Long = 1
+    # Short = 2
 
 
 class StateElement:
@@ -45,15 +46,17 @@ class StateElement:
 
 class TradingFSM:
     def __init__(self):
-        self._states = [StateElement(Positions.Out, Actions.Buy, Positions.Long),
-                        StateElement(Positions.Out, Actions.Sell, Positions.Short),
-                        StateElement(Positions.Out, Actions.Nothing, Positions.Out),
-                        StateElement(Positions.Long, Actions.Buy, Positions.Long),
-                        StateElement(Positions.Long, Actions.Sell, Positions.Out),
-                        StateElement(Positions.Long, Actions.Nothing, Positions.Long),
-                        StateElement(Positions.Short, Actions.Buy, Positions.Out),
-                        StateElement(Positions.Short, Actions.Sell, Positions.Short),
-                        StateElement(Positions.Short, Actions.Nothing, Positions.Short)]
+        self._states = [
+            StateElement(Positions.Out, Actions.Buy, Positions.Long),
+            StateElement(Positions.Out, Actions.Nothing, Positions.Out),
+            StateElement(Positions.Long, Actions.Buy, Positions.Long),
+            StateElement(Positions.Long, Actions.Nothing, Positions.Out),
+            # StateElement(Positions.Out, Actions.Sell, Positions.Short),
+            # StateElement(Positions.Long, Actions.Sell, Positions.Out),
+            # StateElement(Positions.Short, Actions.Buy, Positions.Out),
+            # StateElement(Positions.Short, Actions.Sell, Positions.Short),
+            # StateElement(Positions.Short, Actions.Nothing, Positions.Short)
+        ]
 
     def get_state(self, old_position, action):
         for state in self._states:
@@ -191,8 +194,8 @@ class TradingEnv(gym.Env):
         for tick, position in self._position_history.items():
             if position == Positions.Long:
                 long_ticks.append(tick)
-            elif position == Positions.Short:
-                short_ticks.append(tick)
+            # elif position == Positions.Short:
+            #     short_ticks.append(tick)
             elif position == Positions.Out:
                 out_ticks.append(tick)
 
@@ -222,11 +225,12 @@ class TradingEnv(gym.Env):
         last_trade_price = self.prices[self._last_trade_tick]
         price_diff = current_price - last_trade_price
 
-        if state.old_position == Positions.Short:
-            _step_reward += -price_diff * self.leverage
-        elif state.old_position == Positions.Long:
+        # if state.old_position == Positions.Short:
+        #     _step_reward += -price_diff * self.leverage
+        if state.old_position == Positions.Long:
             _step_reward += price_diff * self.leverage
-        logger.debug(f"current_price {current_price}, last_trade_price {last_trade_price}, price_diff {price_diff} step_reward {_step_reward}")
+        logger.debug(
+            f"current_price {current_price}, last_trade_price {last_trade_price}, price_diff {price_diff} step_reward {_step_reward}")
 
         return _step_reward
 
