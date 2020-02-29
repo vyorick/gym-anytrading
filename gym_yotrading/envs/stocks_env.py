@@ -4,7 +4,7 @@ from .trading_env import TradingEnv, Actions, Positions
 
 class StocksEnv(TradingEnv):
 
-    def __init__(self, df, window_size, frame_bound, price_low=0, price_high=1000, max_loss=None):
+    def __init__(self, df, window_size, frame_bound, price_low=-1000, price_high=1000, max_loss=None):
         assert len(frame_bound) == 2
 
         self.frame_bound = frame_bound

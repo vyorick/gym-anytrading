@@ -23,7 +23,7 @@ logger.addHandler(c_handler)
 class TradingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, df, window_size, price_low=0, price_high=1000, max_loss=None):
+    def __init__(self, df, window_size, price_low=-1000, price_high=1000, max_loss=None):
         assert df.ndim == 2
         self.df = df
         self.window_size = window_size
