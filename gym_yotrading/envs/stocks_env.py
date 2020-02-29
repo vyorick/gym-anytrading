@@ -4,11 +4,11 @@ from .trading_env import TradingEnv, Actions, Positions
 
 class StocksEnv(TradingEnv):
 
-    def __init__(self, df, window_size, frame_bound, max_loss=None):
+    def __init__(self, df, window_size, frame_bound, price_low=0, price_high=1000, max_loss=None):
         assert len(frame_bound) == 2
 
         self.frame_bound = frame_bound
-        super().__init__(df, window_size, max_loss)
+        super().__init__(df, window_size, price_low=price_low, price_high=price_high, max_loss=max_loss)
 
         self.trade_fee_bid_percent = 0.01  # unit
         self.trade_fee_ask_percent = 0.005  # unit

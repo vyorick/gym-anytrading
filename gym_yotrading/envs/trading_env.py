@@ -23,7 +23,7 @@ logger.addHandler(c_handler)
 class TradingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, df, window_size, max_loss=None):
+    def __init__(self, df, window_size, price_low=0, price_high=1000, max_loss=None):
         assert df.ndim == 2
         self.df = df
         self.window_size = window_size
@@ -33,7 +33,7 @@ class TradingEnv(gym.Env):
         self.fsm = TradingFSM()
         # spaces
         self.action_space = spaces.Discrete(len(Actions))
-        self.observation_space = spaces.Box(low=np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
+        self.observation_space = spaces.Box(low=price_low, high=price_high, shape=self.shape, dtype=np.float32)
 
         # episode
         self._start_tick = self.window_size

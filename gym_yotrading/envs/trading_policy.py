@@ -3,8 +3,8 @@ from enum import Enum
 
 
 class Actions(Enum):
-    Sell = 1
     Buy = 0
+    Sell = 1
 
 
 class Positions(Enum):
