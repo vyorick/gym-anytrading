@@ -38,7 +38,7 @@ class TradingEnv(gym.Env):
         # episode
         self._start_tick = self.window_size
         self._end_tick = len(self.prices) - 1
-        self._position = Positions.Out
+        self._position = Positions.Short
         self._done = None
         self._current_tick = None
         self._last_trade_tick = None
@@ -59,8 +59,8 @@ class TradingEnv(gym.Env):
         self._done = False
         self._current_tick = self._start_tick
         self._last_trade_tick = self._current_tick - 1
-        self._position = Positions.Out
-        self._action_history = ((self.window_size + 1) * [Actions.Nothing.value])
+        self._position = Positions.Short
+        self._action_history = ((self.window_size + 1) * [Actions.Sell.value])
         self._position_history = {}
         self._total_reward = 0.
         self._total_profit = 1.  # unit
@@ -118,8 +118,6 @@ class TradingEnv(gym.Env):
                 color = 'red'
             elif position == Positions.Long:
                 color = 'green'
-            elif position == Positions.Out:
-                color = 'blue'
             if color:
                 plt.scatter(tick, self.prices[tick], color=color)
 
@@ -151,9 +149,8 @@ class TradingEnv(gym.Env):
                 long_ticks.append(tick)
             elif position == Positions.Short:
                 short_ticks.append(tick)
-            elif position == Positions.Out:
-                out_ticks.append(tick)
-
+            else:
+                raise Exception("Unknown position - ", position)
         #        plt.plot(short_ticks, [1]*len(short_ticks), 'ro')
         # plt.xlabel(self._action_history)
         plt.plot(long_ticks, self.prices[long_ticks], 'go')
