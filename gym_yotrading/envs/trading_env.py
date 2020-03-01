@@ -23,14 +23,14 @@ logger.addHandler(c_handler)
 class TradingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, df, window_size, max_loss=None):
+    def __init__(self, df, window_size, max_loss=None, hold_penalty_ticks=None):
         assert df.ndim == 2
         self.df = df
         self.window_size = window_size
         self.max_loss = max_loss
         self.prices, self.signal_features = self._process_data()
         self.shape = (window_size+1, self.signal_features.shape[1])
-        self.fsm = TradingFSM()
+        self.fsm = TradingFSM(hold_penalty_ticks)
         # spaces
         self.action_space = spaces.Discrete(len(Actions))
         self.observation_space = spaces.Box(low=np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
@@ -86,6 +86,9 @@ class TradingEnv(gym.Env):
         if state.is_trade_end or self._done:
             step_reward = self._current_deal_reward
             self._total_reward += step_reward
+        else:
+            if state.penalty is not None and self._current_tick - self._last_trade_tick > state.penalty:
+                step_reward = -1
         logger.info(f"step reward {step_reward}, total reward {self._total_reward}, current deal reward {self._current_deal_reward}")
         # and here
         # self._update_profit(state)

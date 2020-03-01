@@ -1,7 +1,10 @@
 import gym
+import gym_yotrading
+from gym_yotrading.envs import TradingEnv, ForexEnv, StocksEnv
+from gym_yotrading.datasets import FOREX_EURUSD_1H_ASK, STOCKS_GOOGL
 import matplotlib.pyplot as plt
 
-env = gym.make('stocks-v1', frame_bound=(50, 500), window_size=10)
+env = gym.make('stocks-v1', frame_bound=(50, 500), window_size=10, hold_penalty_ticks=3)
 # env = gym.make('stocks-v0', frame_bound=(50, 100), window_size=10)
 
 observation = env.reset()
