@@ -29,7 +29,7 @@ class TradingEnv(gym.Env):
         self.window_size = window_size
         self.max_loss = max_loss
         self.prices, self.signal_features = self._process_data()
-        self.shape = (window_size, self.signal_features.shape[1])
+        self.shape = (window_size+1, self.signal_features.shape[1])
         self.fsm = TradingFSM()
         # spaces
         self.action_space = spaces.Discrete(len(Actions))
@@ -45,6 +45,7 @@ class TradingEnv(gym.Env):
         self._action_history = None
         self._position_history = None
         self._total_reward = None
+        self._current_deal_reward = None
         self._total_profit = None
         self._first_rendering = None
         self.np_random = None
@@ -62,7 +63,7 @@ class TradingEnv(gym.Env):
         self._position = Positions.Short
         self._action_history = ((self.window_size + 1) * [Actions.Sell.value])
         self._position_history = {}
-        self._total_reward = 0.
+        self._total_reward = self._current_deal_reward = 0.
         self._total_profit = 1.  # unit
         self._first_rendering = True
         self.trades_count = 0
@@ -81,12 +82,13 @@ class TradingEnv(gym.Env):
         logger.info(f"current tick {self._current_tick}, state {state}")
         # main works here
         step_reward = 0
+        self._current_deal_reward = self._calculate_reward(state)
         if state.is_trade_end or self._done:
-            step_reward = self._calculate_reward(state)
-        self._total_reward += step_reward
-        logger.info(f"step reward {step_reward}, total reward {self._total_reward}")
+            step_reward = self._current_deal_reward
+            self._total_reward += step_reward
+        logger.info(f"step reward {step_reward}, total reward {self._total_reward}, current deal reward {self._current_deal_reward}")
         # and here
-        self._update_profit(state)
+        # self._update_profit(state)
         self._position = state.new_position
         if state.old_position != state.new_position:
             self._position_history[self._current_tick] = self._position
@@ -106,7 +108,10 @@ class TradingEnv(gym.Env):
         return observation, step_reward, self._done, info
 
     def _get_observation(self):
-        return self.signal_features[(self._current_tick - self.window_size):self._current_tick]
+        # return self.signal_features[(self._current_tick - self.window_size):self._current_tick]
+        additional_features = np.array([[self._position.value, self._current_deal_reward]])
+        return np.concatenate((additional_features,
+                               self.signal_features[(self._current_tick - self.window_size):self._current_tick]))
 
     def render(self, mode='human'):
 
