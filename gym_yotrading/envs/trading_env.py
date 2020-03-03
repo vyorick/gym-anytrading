@@ -159,7 +159,7 @@ class TradingEnv(gym.Env):
                 short_ticks.append(tick)
             else:
                 raise Exception("Unknown position - ", position)
-        #        plt.plot(short_ticks, [1]*len(short_ticks), 'ro')
+        # plt.plot(short_ticks, [1]*len(short_ticks), 'ro')
         # plt.xlabel(self._action_history)
         plt.plot(long_ticks, self.prices[long_ticks], 'go')
         plt.plot(short_ticks, self.prices[short_ticks], 'ro')

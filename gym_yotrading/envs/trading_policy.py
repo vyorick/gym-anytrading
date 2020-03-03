@@ -3,8 +3,9 @@ from enum import Enum
 
 
 class Actions(Enum):
-    Sell = 1
     Buy = 0
+    Sell = 1
+    Hold = 2
 
 
 class Positions(Enum):
@@ -28,12 +29,23 @@ class StateElement:
 
 class TradingFSM:
     def __init__(self, hold_penalty_ticks=None):
-        self._states = [
-            StateElement(Positions.Long, Actions.Buy, Positions.Long, hold_penalty_ticks),
-            StateElement(Positions.Long, Actions.Sell, Positions.Short),
-            StateElement(Positions.Short, Actions.Buy, Positions.Long),
-            StateElement(Positions.Short, Actions.Sell, Positions.Short, hold_penalty_ticks),
-        ]
+        policy_type = 2
+        if policy_type == 1:
+            self._states = [
+                StateElement(Positions.Long, Actions.Buy, Positions.Long, hold_penalty_ticks),
+                StateElement(Positions.Long, Actions.Sell, Positions.Short),
+                StateElement(Positions.Short, Actions.Buy, Positions.Long),
+                StateElement(Positions.Short, Actions.Sell, Positions.Short, hold_penalty_ticks),
+            ]
+        elif policy_type == 2:
+            self._states = [
+                StateElement(Positions.Long, Actions.Hold, Positions.Long, hold_penalty_ticks),
+                StateElement(Positions.Long, Actions.Buy, Positions.Long, 0),
+                StateElement(Positions.Long, Actions.Sell, Positions.Short),
+                StateElement(Positions.Short, Actions.Buy, Positions.Long),
+                StateElement(Positions.Short, Actions.Sell, Positions.Short, 0),
+                StateElement(Positions.Short, Actions.Hold, Positions.Short, hold_penalty_ticks),
+            ]
 
     def get_state(self, old_position, action):
         for state in self._states:
