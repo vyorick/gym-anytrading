@@ -25,6 +25,8 @@ class TradingEnv(gym.Env):
 
     def __init__(self, df, window_size, max_loss=None, hold_penalty_ticks=None):
         assert df.ndim == 2
+        self._start_position = Positions.Out
+        self._fill_action = Actions.Out
         self.df = df
         self.window_size = window_size
         self.max_loss = max_loss
@@ -38,7 +40,7 @@ class TradingEnv(gym.Env):
         # episode
         self._start_tick = self.window_size
         self._end_tick = len(self.prices) - 1
-        self._position = Positions.Short
+        self._position = self._start_position
         self._done = None
         self._current_tick = None
         self._last_trade_tick = None
@@ -60,8 +62,8 @@ class TradingEnv(gym.Env):
         self._done = False
         self._current_tick = self._start_tick
         self._last_trade_tick = self._current_tick - 1
-        self._position = Positions.Short
-        self._action_history = ((self.window_size + 1) * [Actions.Sell.value])
+        self._position = self._start_position
+        self._action_history = ((self.window_size + 1) * [self._fill_action.value])
         self._position_history = {}
         self._total_reward = self._current_deal_reward = 0.
         self._total_profit = 1.  # unit
@@ -157,6 +159,8 @@ class TradingEnv(gym.Env):
                 long_ticks.append(tick)
             elif position == Positions.Short:
                 short_ticks.append(tick)
+            elif position == Positions.Out:
+                out_ticks.append(tick)
             else:
                 raise Exception("Unknown position - ", position)
         # plt.plot(short_ticks, [1]*len(short_ticks), 'ro')
