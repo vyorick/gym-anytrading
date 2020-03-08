@@ -31,7 +31,7 @@ class StateElement:
 
 class TradingFSM:
     def __init__(self, hold_penalty_ticks=None):
-        policy_type = 3
+        policy_type = 4
         if policy_type == 1:
             self._states = [
                 StateElement(Positions.Long, Actions.Buy, Positions.Long, hold_penalty_ticks),
@@ -63,6 +63,22 @@ class TradingFSM:
                 StateElement(Positions.Out, Actions.Sell, Positions.Short),
                 StateElement(Positions.Out, Actions.Hold, Positions.Out, 0),
             ]
+        elif policy_type == 4:
+            self._states = [
+                StateElement(Positions.Long, Actions.Hold, Positions.Long, hold_penalty_ticks),
+                StateElement(Positions.Long, Actions.Buy, Positions.Long),
+                StateElement(Positions.Long, Actions.Sell, Positions.Out),
+                StateElement(Positions.Long, Actions.Out, Positions.Out),
+                StateElement(Positions.Short, Actions.Buy, Positions.Out),
+                StateElement(Positions.Short, Actions.Sell, Positions.Short),
+                StateElement(Positions.Short, Actions.Out, Positions.Out),
+                StateElement(Positions.Short, Actions.Hold, Positions.Short, hold_penalty_ticks),
+                StateElement(Positions.Out, Actions.Out, Positions.Out),
+                StateElement(Positions.Out, Actions.Buy, Positions.Long),
+                StateElement(Positions.Out, Actions.Sell, Positions.Short),
+                StateElement(Positions.Out, Actions.Hold, Positions.Out),
+            ]
+
 
     def get_state(self, old_position, action):
         for state in self._states:
