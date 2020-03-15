@@ -116,7 +116,7 @@ class TradingEnv(gym.Env):
     def _get_observation(self):
         # return self.signal_features[(self._current_tick - self.window_size):self._current_tick]
         additional_features = np.array([self._position.value, self._current_deal_reward])
-        base_features = self.signal_features[(self._current_tick - self.window_size):self._current_tick].flatten()
+        base_features = self.signal_features[(self._current_tick - self.window_size):self._current_tick].flatten('F')
         return np.concatenate((additional_features, base_features))
 
     def render(self, mode='human'):
