@@ -32,11 +32,11 @@ class TradingEnv(gym.Env):
         self.window_size = window_size
         self.max_loss = max_loss
         self.prices, self.signal_features = self._process_data()
-        self.shape = (window_size+1, self.signal_features.shape[1])
+        self.shape = (self.window_size*self.signal_features.shape[1] + 2,)
         self.fsm = TradingFSM(hold_penalty_ticks)
         # spaces
         self.action_space = spaces.Discrete(len(Actions))
-        self.observation_space = spaces.Box(low=np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
 
         # episode
         self._start_tick = self.window_size
@@ -115,9 +115,9 @@ class TradingEnv(gym.Env):
 
     def _get_observation(self):
         # return self.signal_features[(self._current_tick - self.window_size):self._current_tick]
-        additional_features = np.array([[self._position.value, self._current_deal_reward]])
-        return np.concatenate((additional_features,
-                               self.signal_features[(self._current_tick - self.window_size):self._current_tick]))
+        additional_features = np.array([self._position.value, self._current_deal_reward])
+        base_features = self.signal_features[(self._current_tick - self.window_size):self._current_tick].flatten()
+        return np.concatenate((additional_features, base_features))
 
     def render(self, mode='human'):
 
